@@ -1,0 +1,1 @@
+create TABLE rides(VendorID varchar, pickup_datetime varchar, dropoff_datetime varchar, Pickup_longitude varchar, Pickup_latitude varchar, Dropoff_longitude varchar, Dropoff_latitude varchar, Passenger_count int, Trip_distance varchar, Total_amount varchar, Trip_time VARCHAR(100));
