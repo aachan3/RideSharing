@@ -5,12 +5,23 @@ import urllib2
 import requests
 import time
 import math
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from Tkinter import *
+
 
 start_time = time.clock()
 mydb = MySQLdb.connect(host='localhost',
                        user='root',
                        passwd='root',
                        db='ridesharing')
+
+
+
+
+
 
 #global distance_final
 distance_final = 0.0
@@ -21,6 +32,26 @@ gridDict = dict()
 m= 2 #218
 n= 2 #218
 lat_long = []
+
+
+def func(values):
+    overall_distance = values
+    
+    i = [0,1]
+    width = 0.5
+    
+    f = Figure(figsize=(7,5), dpi=80)
+    ax = f.add_subplot(111)
+    
+    bars = ax.bar(i,values,width,color='r')
+    ax.set_ylabel('Distance (mi)')
+    ax.set_xlabel('Without RideSharing                                      With RideSharing')
+    ax.set_xticklabels([])
+    
+    canvas = FigureCanvasTkAgg(f, master=root)
+    canvas.show()
+    canvas.get_tk_widget().pack({"side":"bottom"})
+
 
 def getGridID(inputX,inputY):
     gX = int((68*(inputX - cX) / m ))
@@ -89,33 +120,33 @@ def updateDict():
                         gridDict[eachItem].append(v[0])
                         v.remove(v[0])
                         gridDict[k] = v
-                        break 
+                        break
 
 
 
 def command_execution():
-    url = "https://graphhopper.com/api/1/vrp/optimize?key=697b7a3c-49e7-44db-912e-e475711256bd"
+    url = "https://graphhopper.com/api/1/vrp/optimize?key=186be36b-9118-4e45-9627-306761281631"
     headers = {'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=open('/Users/aravindachanta/Desktop/input.json', 'rb'), headers=headers)
     json_data = r.json()
     job = json_data ['job_id']
     print job
     time.sleep(1)
-    url1 = "https://graphhopper.com/api/1/vrp/solution/"+job+"?key=697b7a3c-49e7-44db-912e-e475711256bd"
+    url1 = "https://graphhopper.com/api/1/vrp/solution/"+job+"?key=186be36b-9118-4e45-9627-306761281631"
     headers = {'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     f = requests.get(url1,headers=headers)
     out = f.json()
     with open('/Users/aravindachanta/Desktop/output.json', 'w') as fp:
-    	json.dump(out, fp)
+        json.dump(out, fp)
 
 def output(length_val):
     global distance_final
     print "helllll"
     with open("/Users/aravindachanta/Desktop/Output.json") as json_file:
-    	json_data = json.load(json_file)
-    	j = 0
-    	no_of_vehicles = len(json_data ['solution']['routes'])
-    	while(j<no_of_vehicles):
+        json_data = json.load(json_file)
+        j = 0
+        no_of_vehicles = len(json_data ['solution']['routes'])
+        while(j<no_of_vehicles):
             i = 0
             aList = []
             length_of_vehicle = len(json_data ['solution']['routes'][j]['activities'])
@@ -124,7 +155,7 @@ def output(length_val):
             aList.append(json_data['solution']['routes'][j]['vehicle_id'])
             aList.append("picks up ->")
             while (i <= length_of_vehicle-3):
-            	temp = json_data ['solution']['routes'][j]['activities'][i+1]['id']
+                temp = json_data ['solution']['routes'][j]['activities'][i+1]['id']
                 aList.append(temp)
                 i = i+1
                 print (aList)
@@ -139,17 +170,60 @@ def output(length_val):
     #print "length:", length_of_unassigned
     print "Distance without ridesharing: " ,distance
     print "Total Distance with ride sharing: ", distance_final * 0.00062137
-    #print "Cost without ride sharing: ",cost
-    #print "Total cost with ride sharing: ", json_data['solution']['costs']
+#print "Cost without ride sharing: ",cost
+#print "Total cost with ride sharing: ", json_data['solution']['costs']
+
+class Application(Frame):
+    def run_algorithm(self):
+        print("Stub")
+    
+    def say_bye(self):
+        print("Exiting")
+    
+    def createWidgets(self):
+        values = (distance,distance_final*0.00062137)
+        func(values)
+        
+        #self.loggeddata = Text(self, state="disabled", width = 70,height=5)
+        #self.loggeddata.pack({"side":"bottom"})
+        
+        
+        self.L1 = Label(text= "Ridesharing Vs. Distance")
+        self.L1.pack({"side":"top"})
+    
+    
+    
+    #self.E1 = Entry(bd =1)
+    #self.E1.pack({"side":"top"})
+    
+    #self.L2 = Label(text="End Time and Date (yy/dd/mm hh:mm): ")
+    #self.L2.pack({"side":"top"})
+    #self.E2 = Entry(bd =1)
+    #self.E2.pack({"side":"top"})
+    
+    #self.run_algorithm = Button(self)
+    #self.run_algorithm["text"] = "Run Algorithm"
+    #self.run_algorithm["command"] = self.run_algorithm
+    
+    #self.run_algorithm.pack({"side":"top"})
+    
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        master.title("Ride-sharing Program")
+        master.minsize(width=600, height=600)
+        master.maxsize(width=600, height=600)
+        self.pack()
+        self.createWidgets()
 
 
-sqlstmt = "SELECT Trip_distance,record_no,Dropoff_latitude, Dropoff_longitude,Passenger_count,Total_amount from cabs where STR_TO_DATE(pickup_datetime,'%y/%d/%m %T') BETWEEN str_to_date('16/5/4 20:00','%y/%d/%m %T') AND str_to_date('16/5/4 20:20','%y/%d/%m %T')";
+
+sqlstmt = "SELECT Trip_distance,record_no,Dropoff_latitude, Dropoff_longitude,Passenger_count,Total_amount from cabs where STR_TO_DATE(pickup_datetime,'%y/%d/%m %T') BETWEEN str_to_date('16/22/1 21:00','%y/%d/%m %T') AND str_to_date('16/22/1 21:05','%y/%d/%m %T')";
 distance = 0.0
 cost = 0.0
 try:
     # Execute the SQL command
     cursor.execute(sqlstmt)
-    #print "1"
+#print "1"
 except:
    	print "Error: unable to fecth data"
 results = cursor.fetchall()
@@ -166,7 +240,7 @@ for row in results:
     #print(gridID)
     addToDict(no,gridID)
 for k,v in gridDict.items():
-    print k,v
+    print "BEFORE",k,v
 updateDict()
 
 i = 1;
@@ -176,11 +250,11 @@ for k,v in gridDict.items():
     lat_long=[]
     if (len(v) != 0):
         for ids in v:
-            sqlstmt1 = "SELECT Dropoff_latitude, Dropoff_longitude,Passenger_count,Total_amount, Pickup_latitude,Pickup_longitude from cabs where record_no = "+str(ids) 
+            sqlstmt1 = "SELECT Dropoff_latitude, Dropoff_longitude,Passenger_count,Total_amount, Pickup_latitude,Pickup_longitude from cabs where record_no = "+str(ids)
             try:
                 # Execute the SQL command
                 cursor.execute(sqlstmt1)
-                #print "1"
+            #print "1"
             except:
                 print "Error: unable to fecth data"
             row1 = cursor.fetchone()
@@ -191,10 +265,16 @@ for k,v in gridDict.items():
             pickupY = float(row1[4])
             pickupX = float(row1[5])
             lat_long.append((inputX,inputY,ids,passenger,pickupX,pickupY))
-        print "Loop: ",i, k,v
+    print "Loop: ",i, k,v
         i+=1
         length_val = to_json(lat_long)
         command_execution()
         output(length_val)
 end_time = time.clock()
-print "Time for processing: ", end_time - start_time 
+root = Tk()
+app = Application(master=root)
+app.mainloop()
+root.destroy()
+print "Time for processing: ", end_time - start_time
+for k,v in gridDict.items():
+    print k,v
